@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
@@ -31,21 +33,43 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return RedirectResponse
+     * @throws ValidationException
      */
     public function store(Request $request)
     {
-        $product = new Product();
-        $product->name = $request->has('name') ? $request->get('name') : '' ;
-        $product->price = $request->has('price') ? $request->get('price') : '' ;
-        $product->amount = $request->has('amount') ? $request->get('amount') : '' ;
-        $product->isActive = 1;
-
-        $product->save();
-
-        return back()->with('success', 'Product successfully saved!');
+        $this->validate($request, [
+            'name'   => 'required|min:3|max:100',
+            'price'  => 'nullable|numeric|max:10' ,
+            'amount' =>  'nullable|numeric|max:10',
+            'images' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048' ,
+           ]);
+        $data = [
+            'name'     => $request['name'],
+            'price'    => $request['price'],
+            'amount'   => $request['amount'],
+            'isActive' => 1,
+        ];
+        $imageLocation = [];
+        if ($request->hasFile('images')){
+            $files = $request->file('images');
+            foreach ($files as $file){
+                $fileName = rand(100, 1000).''. time(). '.' . $file->getClientOriginalExtension();
+                $filePath = public_path('/images/uploads/');
+                $file->move($filePath, $fileName);
+                $imageLocation[] = $fileName;
+            }
+            $data['images'] = implode('|', $imageLocation);
+        }
+        $product = Product::create($data);
+        if ($product) {
+            return back()->with('success', 'Product successfully saved!');
+        }else {
+            return back()->with('error', 'something went to wrong!');
+        }
     }
+
 
     /**
      * Display the specified resource.
@@ -72,7 +96,7 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\Response
      */

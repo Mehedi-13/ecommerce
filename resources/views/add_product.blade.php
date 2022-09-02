@@ -53,12 +53,12 @@
                         <hr style="border: none; background: #ff523b; height: 3px;">
                     </div>
 
-                    <form id="LoginForm" method="POST" action="/products" enctype="multipart/form-data">
+                    <form id="LoginForm" method="POST" action={{route('products.store')}} enctype="multipart/form-data">
                         @csrf
-                        <input type="text" name="name" placeholder="Product Name">
-                        <input type="text" name="price" placeholder="Price">
-                        <input type="text" name="amount" placeholder="Amount">
-                        <input type="file" name="image">
+                        <input type="text" name="name" placeholder="Product Name" required>
+                        <input type="number" name="price" placeholder="Price">
+                        <input type="number" name="amount" placeholder="Amount">
+                        <input type="file" name="images[]" multiple>
                         <button type="submit" class="btn">Add Product</button>
                     </form>
                 </div>
